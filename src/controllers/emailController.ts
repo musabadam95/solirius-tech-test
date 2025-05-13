@@ -40,19 +40,15 @@ export const uploadCSV = async (req: Request, res: Response) => {
             "failedRecords": 0,
             "details": []
         }))
-        logger.info('File uploaded successfully', 'Upload ID: '+ uploadID);
+        logger.info('File uploaded successfully', 'Upload ID: ' + uploadID);
 
-        // Commented out the following line as it was causing issues with test and postman was showing both responses together.
-        // To have the ability to to send an initial response, I would use res.write function at the start and end of the response
-
-        // res.status(202)
-        // res.status(202).write(JSON.stringify({ "message": 'File uploaded successfully' }));
         const filePath = req.file.path;
         const validationResults: Promise<void>[] = []
         const failedRecords: FailedRecords[] = []
         const processedRecords: string[] = []
         let totalRecords: number = 0
         let isCSVFieldsValid = false
+
         Papa.parse<Email>(fs.createReadStream(filePath), {
             header: true,
             skipEmptyLines: true,
@@ -62,6 +58,9 @@ export const uploadCSV = async (req: Request, res: Response) => {
                     if (fields?.includes("name") && fields?.includes("email")) {
                         isCSVFieldsValid = true;
                         logger.info('CSV fields are valid');
+                        res.status(202)
+                        res.write(JSON.stringify({ "message": 'File uploaded successfully', "uploadID": uploadID }));
+                        res.write('\n')
                     } else {
                         throw new Error('Invalid CSV headers');
                     }
@@ -74,19 +73,19 @@ export const uploadCSV = async (req: Request, res: Response) => {
                             if (row.data.name) {
                                 const validatedResult = await mockValidateEmail(row.data.email)
                                 if (validatedResult.isValid) {
-                                    logger.info('Valid email: '+ row.data.email);
+                                    logger.info('Valid email: ' + row.data.email);
                                     processedRecords.push(row.data.email);
                                 } else {
-                                    logger.warn('Invalid email: '+ row.data.email);
+                                    logger.warn('Invalid email: ' + row.data.email);
                                     failedRecords.push({ name: row.data.name, email: row.data.email, error: validatedResult.error || 'Invalid email address' });
                                 }
                             } else {
-                                logger.warn('Name field is empty for email: '+ row.data.email);
+                                logger.warn('Name field is empty for email: ' + row.data.email);
                                 failedRecords.push({ name: row.data.name, email: row.data.email, error: 'Name field is empty' });
                             }
                         } catch (error: unknown) {
                             if (error instanceof Error) {
-                                logger.warn('Error validating email: '+ error);
+                                logger.warn('Error validating email: ' + error);
                                 failedRecords.push({ name: row.data.name, email: row.data.email, error: error.message || 'Error validating email' });
                             }
                         }
@@ -111,36 +110,39 @@ export const uploadCSV = async (req: Request, res: Response) => {
                 } as UploadStatus
                 await client.set(uploadID, JSON.stringify(statusMessage))
                 await client.quit()
-                return res.status(202).json(statusMessage);
+                res.write(JSON.stringify(statusMessage));
+                res.end();
+                return
             },
             error: (err: Error) => {
                 if (err.message === 'Invalid CSV headers') {
                     logger.error('Invalid CSV headers');
-                    res.status(400).send({ message: 'Invalid CSV headers' });
+                    res.status(400)
+                    res.write(JSON.stringify({ message: 'Invalid CSV headers' }));
                     client.quit()
 
                 } else {
                     logger.error('Error processing CSV file:', err);
-                    res.status(500).send({ message: 'Error processing CSV file' });
+                    res.status(500).write(JSON.stringify({ message: 'Error processing CSV file' }));
                     client.quit()
-
                 }
+                res.end();
                 return
             }
         });
+
     } catch (error) {
         await client.quit()
         if (error instanceof Error) {
             logger.error('Error:', error.message);
-            res.status(500).send({ message: error.message });
+            res.status(500).write(JSON.stringify({ message: error.message }));
         }
         else {
             logger.error('Error:', error);
-            res.status(500).send({ message: 'Internal server error' });
+            res.status(500).write(JSON.stringify({ message: 'Internal server error' }));
         }
-        return
+        res.end();
     }
-
     return
 }
 
@@ -155,7 +157,7 @@ export const getUploadStatus = async (req: Request, res: Response) => {
     const uploadID = req.params.uploadID;
     const status = await client.get(uploadID)
     if (!status) {
-        logger.error('Upload ID not found:'+ uploadID);
+        logger.error('Upload ID not found:' + uploadID);
         res.status(404).send({ message: 'Upload ID not found' });
         await client.quit()
         return

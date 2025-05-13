@@ -44,7 +44,7 @@ The server will start on port 8080.
 ### Run Tests
 
 ```sh
-npm test
+npm run test
 ```
 
 ## API Endpoints
@@ -54,6 +54,7 @@ npm test
 Upload a CSV file with `name` and `email` columns.
 
 - **Form field:** `file` (CSV file)
+- **Response:** UploadID and message.
 - **Response:** Upload status and details.
 
 ### GET `/email/status/:uploadID`
