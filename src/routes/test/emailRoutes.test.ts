@@ -2,7 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import emailRouter from '../emailRoute';
 import path from 'path';
-const app = require('../../app');
+import app from '../../app';
 
 jest.mock('p-limit', () => {
     return jest.fn(() => {

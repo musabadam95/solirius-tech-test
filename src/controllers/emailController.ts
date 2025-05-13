@@ -40,7 +40,7 @@ export const uploadCSV = async (req: Request, res: Response) => {
             "failedRecords": 0,
             "details": []
         }))
-        logger.info('File uploaded successfully', 'Upload ID:', uploadID);
+        logger.info('File uploaded successfully', 'Upload ID: '+ uploadID);
 
         // Commented out the following line as it was causing issues with test and postman was showing both responses together.
         // To have the ability to to send an initial response, I would use res.write function at the start and end of the response
@@ -74,19 +74,19 @@ export const uploadCSV = async (req: Request, res: Response) => {
                             if (row.data.name) {
                                 const validatedResult = await mockValidateEmail(row.data.email)
                                 if (validatedResult.isValid) {
-                                    logger.info('Valid email:', row.data.email);
+                                    logger.info('Valid email: '+ row.data.email);
                                     processedRecords.push(row.data.email);
                                 } else {
-                                    logger.warn('Invalid email:', row.data.email);
+                                    logger.warn('Invalid email: '+ row.data.email);
                                     failedRecords.push({ name: row.data.name, email: row.data.email, error: validatedResult.error || 'Invalid email address' });
                                 }
                             } else {
-                                logger.warn('Name field is empty for email:', row.data.email);
+                                logger.warn('Name field is empty for email: '+ row.data.email);
                                 failedRecords.push({ name: row.data.name, email: row.data.email, error: 'Name field is empty' });
                             }
                         } catch (error: unknown) {
                             if (error instanceof Error) {
-                                logger.warn('Error validating email:', error);
+                                logger.warn('Error validating email: '+ error);
                                 failedRecords.push({ name: row.data.name, email: row.data.email, error: error.message || 'Error validating email' });
                             }
                         }
@@ -155,7 +155,7 @@ export const getUploadStatus = async (req: Request, res: Response) => {
     const uploadID = req.params.uploadID;
     const status = await client.get(uploadID)
     if (!status) {
-        logger.error('Upload ID not found:', uploadID);
+        logger.error('Upload ID not found:'+ uploadID);
         res.status(404).send({ message: 'Upload ID not found' });
         await client.quit()
         return

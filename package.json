@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node ./src/server.ts",
-    "watch": "nodemon ./src/server.ts",
+    "start": "ts-node src/server.ts",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "test": "jest"
   },
   "keywords": [],
@@ -36,10 +37,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@types/multer": "^1.4.12",
-    "csv-parse": "^5.6.0",
-    "csv-parser": "^3.2.0",
-    "express": "4.21.0",
+    "@types/multer": "^1.4.12",   "express": "4.21.0",
     "express-rate-limit": "^7.5.0",
     "multer": "^1.4.5-lts.2",
     "p-limit": "^6.2.0",
