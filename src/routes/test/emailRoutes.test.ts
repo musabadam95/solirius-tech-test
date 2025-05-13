@@ -20,7 +20,6 @@ describe('Email Routes', () => {
             const res = await request(app).post('/upload');
             expect(res.status).toBe(400);
             expect(res.body).toEqual({ message: 'No file uploaded' });
-
         });
 
         it('should return 400 if file is not a CSV', async () => {
@@ -59,17 +58,25 @@ describe('Email Routes', () => {
         it('should return 202 and success message for valid CSV upload with failed emails', async () => {
             const expectedResBody = {
                 totalRecords: 4,
-                processedRecords: 2,
-                failedRecords: 2,
-                details: [{
-                    "email": "test2gmail.com",
-                    "error": "Invalid email address",
-                    "name": "Test 2",
-                }, {
-                    "email": "test3gmail.com",
-                    "error": "Invalid email address",
-                    "name": "Test 3",
-                }],
+                processedRecords: 1,
+                failedRecords: 3,
+                details: [
+                    {
+                        name: '',
+                        email: 'test3@gmail.com',
+                        error: 'Name field is empty'
+                    },
+                    {
+                        name: 'Test 2',
+                        email: 'test2gmail.com',
+                        error: 'Invalid email address'
+                    },
+                    {
+                        name: 'Test 3',
+                        email: 'test3gmail.com',
+                        error: 'Invalid email address'
+                    }
+                ],
                 uploadID: expect.any(String),
             };
             const res = await request(app)
